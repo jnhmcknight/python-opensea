@@ -90,6 +90,36 @@ class OpenseaAPI:
             return response
         return response.json()
 
+    def _make_paginated_request(self, endpoint=None, params=None, rate_limiting=2):
+
+        max_pages =3
+        count = 1
+        print(f'Returning page: {count}')
+        data = self._make_request(endpoint, params)
+
+        if not data:
+            return
+
+        yield data
+
+        while data.get('next'):
+            # update the `next` parameter for the upcoming request
+            params["cursor"] = data["next"]
+
+            time.sleep(rate_limiting)
+
+            count += 1
+            print(f'Returning page: {count}')
+            data = self._make_request(endpoint, params)
+
+            if not data:
+                break
+
+            yield data
+
+            if count > max_pages:
+                break
+
     def events(
         self,
         asset_contract_address=None,
@@ -213,18 +243,7 @@ class OpenseaAPI:
             "collection_editor": collection_editor,
         }
 
-        # make the first request to get the `next` cursor has
-        first_request = self._make_request("events", query_params)
-        yield first_request
-        query_params["cursor"] = first_request["next"]
-
-        # pagination
-        while True:
-            time.sleep(rate_limiting)
-            data = self._make_request("events", query_params)
-
-            # update the `next` parameter for the upcoming request
-            query_params["cursor"] = data["next"]
+        for data in self._make_paginated_request("events", query_params):
 
             time_field = data["asset_events"][0]["created_date"]
             current_time = utils.str_to_datetime_utc(time_field)
@@ -232,6 +251,7 @@ class OpenseaAPI:
                 yield data
             else:
                 break
+
         yield None
 
     def asset(
