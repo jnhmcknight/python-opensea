@@ -259,6 +259,7 @@ class OpenseaAPI:
         asset_contract_address,
         token_id,
         account_address=None,
+        include_orders=False,
         export_file_name="",
     ):
         """Fetches Asset data from the API.
@@ -274,7 +275,10 @@ class OpenseaAPI:
             [dict]: Single asset data
         """
         endpoint = f"asset/{asset_contract_address}/{token_id}"
-        query_params = {"account_address": account_address}
+        query_params = {
+            "account_address": account_address,
+            "include_orders": "true" if include_orders else "false",
+        }
         return self._make_request(endpoint, query_params, export_file_name)
 
     def assets(
