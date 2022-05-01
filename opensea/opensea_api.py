@@ -291,7 +291,7 @@ class OpenseaAPI:
         order_direction=None,
         offset=None,
         limit=None,
-        collection=None,
+        collection_slug=None,
         export_file_name="",
     ):
         """Fetches assets data from the API. Function arguments will be passed
@@ -316,9 +316,18 @@ class OpenseaAPI:
             "order_direction": order_direction,
             "offset": offset,
             "limit": self.MAX_ASSET_ITEMS if limit is None else limit,
-            "collection": collection,
+            "collection_slug": collection_slug,
         }
-        return self._make_request("assets", query_params, export_file_name)
+
+        if export_file_name:
+            return self._make_request("assets", query_params, export_file_name)
+
+        else:
+            all_assets = []
+            for data in self._make_paginated_request("assets", query_params):
+                print(data)
+                all_assets.extend(data['assets'])
+            return all_assets
 
     def contract(self, asset_contract_address, export_file_name=""):
         """Fetches asset contract data from the API.
