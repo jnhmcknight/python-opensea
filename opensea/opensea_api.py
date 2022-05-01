@@ -1,7 +1,11 @@
+
 import time
 import requests
+
 from datetime import datetime
 from opensea import utils
+
+from .exceptions import RateLimitedException
 
 
 class OpenseaAPI:
@@ -73,6 +77,8 @@ class OpenseaAPI:
             raise requests.exceptions.HTTPError(response.text)
         elif response.status_code == 403:
             raise ConnectionError("The server blocked access.")
+        elif response.status_code == 429:
+            raise RateLimitedException('Rate Limited.')
         elif response.status_code == 495:
             raise requests.exceptions.SSLError("SSL certificate error")
         elif response.status_code == 504:
